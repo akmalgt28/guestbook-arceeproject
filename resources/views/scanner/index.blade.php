@@ -31,7 +31,19 @@
 
                 <aside class="space-y-6">
                     <section class="rounded-3xl border border-white/10 bg-white/10 p-5 backdrop-blur sm:p-7"><h2 class="text-xl font-semibold">Input manual</h2><p class="mt-2 text-sm text-white/60">Pakai jika kamera gagal atau QR tidak terbaca.</p><form class="mt-5 space-y-3" x-on:submit.prevent="submitManual"><input x-model="manualToken" class="w-full rounded-xl border-0 bg-white px-4 py-3 text-slate-900" placeholder="Token QR" autocomplete="off"><button class="w-full rounded-xl bg-amber-300 px-5 py-3 font-semibold text-slate-950 disabled:opacity-40" type="submit" x-bind:disabled="!eventId || !manualToken.trim()">Kirim token</button></form></section>
-                    <section x-show="result || error || candidate" x-cloak class="rounded-3xl border border-white/10 bg-white/10 p-5 backdrop-blur sm:p-7"><h2 class="text-xl font-semibold">Status</h2><p x-show="result" class="mt-4 rounded-xl bg-amber-300 p-4 text-slate-950" x-text="result"></p><p x-show="error" class="mt-4 rounded-xl bg-red-400 p-4 text-red-950" x-text="error"></p><div x-show="candidate" class="mt-4 rounded-xl bg-white p-4 text-slate-900"><p class="text-lg font-semibold" x-text="candidate?.name"></p><p class="mt-1 text-sm text-slate-500" x-text="candidate?.phone || candidate?.email || 'Kontak tidak tersedia'"></p><p class="mt-1 text-sm text-slate-500">RSVP: <span x-text="candidate?.guest_count || 0"></span> orang</p><p x-show="alreadyCheckedIn" class="mt-3 rounded-lg bg-red-100 p-3 text-sm text-red-800">Sudah check-in sebelumnya.</p><div x-show="!alreadyCheckedIn" class="mt-4 flex gap-2"><input x-model.number="actualAttendeeCount" type="number" min="1" max="999" class="w-24 rounded-lg border-slate-300 px-3 py-2" aria-label="Jumlah hadir aktual"><button type="button" x-on:click="confirmCheckin" class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white" x-bind:disabled="loading">Konfirmasi</button></div></div></section>
+                                        <section x-show="result || error" x-cloak class="rounded-3xl border border-white/10 bg-white/10 p-5 backdrop-blur sm:p-7"><h2 class="text-xl font-semibold">Status</h2><p x-show="result" class="mt-4 rounded-xl bg-amber-300 p-4 text-slate-950" x-text="result"></p><p x-show="error" class="mt-4 rounded-xl bg-red-400 p-4 text-red-950" x-text="error"></p></section>
+
+                    <div x-show="candidate" x-cloak x-on:keydown.escape.window="closeCandidate" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4" role="dialog" aria-modal="true" aria-labelledby="candidate-title">
+                        <section class="w-full max-w-md rounded-3xl bg-white p-6 text-slate-900 shadow-2xl">
+                            <div class="flex items-start justify-between gap-4">
+                                <div><p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">QR terbaca</p><h2 id="candidate-title" class="mt-2 text-2xl font-semibold" x-text="candidate?.name"></h2></div>
+                                <button type="button" x-on:click="closeCandidate" class="rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold">Tutup</button>
+                            </div>
+                            <div class="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4"><p class="text-sm text-slate-500">Instansi</p><p class="mt-1 font-semibold" x-text="candidate?.organization || 'Instansi tidak diisi'"></p><p class="mt-3 text-sm text-slate-500">Kontak</p><p class="mt-1 font-semibold" x-text="candidate?.phone || candidate?.email || 'Kontak tidak tersedia'"></p><p class="mt-3 text-sm text-slate-500">Jumlah tamu terdaftar</p><p class="mt-1 font-semibold" x-text="(candidate?.guest_count || 0) + ' orang'"></p></div>
+                            <p x-show="alreadyCheckedIn" class="mt-4 rounded-xl bg-red-100 p-4 text-sm text-red-800">Tamu sudah check-in sebelumnya.</p>
+                            <div x-show="!alreadyCheckedIn" class="mt-5"><label for="actual-attendee-count" class="text-sm font-semibold">Jumlah hadir aktual</label><input id="actual-attendee-count" x-model.number="actualAttendeeCount" type="number" min="1" max="999" class="mt-2 w-full rounded-xl border-slate-300 px-4 py-3" autofocus><button type="button" x-on:click="confirmCheckin" class="mt-4 w-full rounded-xl bg-slate-900 px-4 py-3 font-semibold text-white disabled:cursor-wait disabled:opacity-50" x-bind:disabled="loading || !actualAttendeeCount">Simpan check-in</button></div>
+                        </section>
+                    </div>
                 </aside>
             </div>
         </main>
@@ -52,7 +64,30 @@
                     },
                     async stop() { if (this.scanner) { try { await this.scanner.stop(); } catch (exception) {} this.scanner.clear(); } this.scanning = false; this.cameraStatus = 'Kamera berhenti.'; },
                     submitManual() { this.submitToken(this.manualToken); },
-                    submitToken(token) { const value = token.trim(); if (!this.eventId || !value) return; this.error = ''; this.result = `QR terbaca untuk event ID ${this.eventId}. Token siap diproses.`; this.manualToken = value; },
+                    async submitToken(token) {
+                        const value = token.trim();
+                        if (!this.eventId || !value || this.loading) return;
+                        this.loading = true; this.error = ''; this.result = ''; this.candidate = null;
+                        try {
+                            const response = await fetch('{{ route('checkin.scan') }}', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }, body: JSON.stringify({ event_id: this.eventId, qr_token: value }) });
+                            const data = await response.json();
+                            if (!response.ok) throw new Error(data.message || 'QR tidak dapat diproses.');
+                            this.manualToken = value; this.pendingQrCodeId = data.qr_code_id; this.candidate = data.recipient; this.alreadyCheckedIn = data.already_checked_in; this.actualAttendeeCount = Number(data.recipient.guest_count || 1);
+                        } catch (exception) { this.error = exception.message || 'QR tidak dapat diproses.'; }
+                        finally { this.loading = false; }
+                    },
+                    async confirmCheckin() {
+                        if (!this.pendingQrCodeId || !this.actualAttendeeCount || this.loading) return;
+                        this.loading = true; this.error = '';
+                        try {
+                            const response = await fetch('{{ route('checkin.confirm') }}', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }, body: JSON.stringify({ event_id: this.eventId, qr_code_id: this.pendingQrCodeId, actual_attendee_count: this.actualAttendeeCount }) });
+                            const data = await response.json();
+                            if (!response.ok) throw new Error(data.message || 'Check-in gagal disimpan.');
+                            this.result = data.message || 'Check-in berhasil.'; this.closeCandidate();
+                        } catch (exception) { this.error = exception.message || 'Check-in gagal disimpan.'; }
+                        finally { this.loading = false; }
+                    },
+                    closeCandidate() { this.candidate = null; this.pendingQrCodeId = null; this.alreadyCheckedIn = false; },
                 };
             }
         </script>

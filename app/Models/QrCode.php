@@ -12,7 +12,7 @@ class QrCode extends Model
     use HasFactory;
 
     protected $fillable = [
-        'invitation_id',
+        'recipient_id',
         'token_hash',
         'status',
         'generated_at',
@@ -24,9 +24,9 @@ class QrCode extends Model
 
     public const STATUS_REVOKED = 'revoked';
 
-    public function invitation(): BelongsTo
+    public function recipient(): BelongsTo
     {
-        return $this->belongsTo(Invitation::class);
+        return $this->belongsTo(Recipient::class);
     }
 
     public static function generateTokenHash(): string

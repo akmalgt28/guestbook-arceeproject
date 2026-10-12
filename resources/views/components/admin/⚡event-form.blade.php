@@ -1,9 +1,7 @@
 <?php
 
 use App\Models\Event;
-use App\Models\InvitationTemplate;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Str;
 use Livewire\Component;
 
 new class extends Component
@@ -21,12 +19,6 @@ new class extends Component
     public string $contactPhone = '';
     public string $status = Event::STATUS_DRAFT;
     public bool $countdownEnabled = true;
-
-    public string $templateId = '';
-
-    public string $invitationCategory = 'general';
-
-    public string $invitationLink = '';
 
     public function mount(?int $eventId = null): void
     {
@@ -52,17 +44,6 @@ new class extends Component
         $this->contactPhone = $event->contact_phone ?? '';
         $this->status = $event->status;
         $this->countdownEnabled = (bool) data_get($event->settings, 'countdown_enabled', true);
-        $this->templateId = (string) ($event->templates()->value('invitation_templates.id') ?? '');
-        $this->invitationCategory = (string) data_get($event->settings, 'invitation.category', 'general');
-        $this->invitationLink = (string) data_get($event->settings, 'invitation.custom_link', Str::slug($event->name));
-    }
-
-    /** @return array<string, mixed> */
-    public function with(): array
-    {
-        return [
-            'templates' => InvitationTemplate::query()->active()->orderBy('name')->pluck('name', 'id'),
-        ];
     }
 
     public function save(): void
@@ -85,11 +66,6 @@ new class extends Component
             'settings' => [
                 ...($this->eventId ? ($this->accessibleEvents()->findOrFail($this->eventId)->settings ?? []) : []),
                 'countdown_enabled' => $data['countdownEnabled'],
-                'invitation' => [
-                    'category' => $data['invitationCategory'],
-                    'custom_link' => $data['invitationLink'],
-                    'configured' => true,
-                ],
             ],
         ];
 
@@ -98,12 +74,6 @@ new class extends Component
             $event->update($attributes);
         } else {
             $event = Event::query()->create([...$attributes, 'created_by' => auth()->id()]);
-        }
-
-        if ($data['templateId'] !== '') {
-            $event->templates()->sync([$data['templateId']]);
-        } else {
-            $event->templates()->detach();
         }
 
         session()->flash('success', $this->eventId ? 'Event berhasil diperbarui.' : 'Event berhasil dibuat.');
@@ -138,9 +108,6 @@ new class extends Component
             'contactPhone' => ['nullable', 'string', 'max:50'],
             'status' => ['required', 'in:draft,published,archived'],
             'countdownEnabled' => ['boolean'],
-            'templateId' => ['nullable', 'integer', 'exists:invitation_templates,id'],
-            'invitationCategory' => ['required', 'in:general,wedding,birthday,corporate,other'],
-            'invitationLink' => ['required', 'string', 'min:4', 'max:80', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/'],
         ];
     }
 };
@@ -179,25 +146,6 @@ new class extends Component
             </div>
         </section>
 
-        <section class="space-y-5 border-t border-slate-100 pt-8">
-            <div>
-                <h2 class="text-lg font-semibold text-brand-950">Template undangan</h2>
-                <p class="mt-1 text-sm text-slate-500">Pilih template yang dipakai event ini. Template bisa kamu atur terpisah di menu Template undangan.</p>
-            </div>
-            <div class="grid gap-5 md:grid-cols-2">
-                <div><label for="invitation-category" class="text-sm font-semibold text-slate-700">Kategori undangan</label><select id="invitation-category" wire:model="invitationCategory" class="mt-2 w-full rounded-xl border-slate-300 px-4 py-3 focus:border-brand-500 focus:ring-brand-500"><option value="general">Umum &amp; Seminar</option><option value="wedding">Pernikahan</option><option value="birthday">Ulang Tahun</option><option value="corporate">Corporate</option><option value="other">Lainnya</option></select>@error('invitationCategory')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror</div>
-                <div><label for="invitation-link" class="text-sm font-semibold text-slate-700">Custom URL</label><div class="mt-2 flex"><span class="inline-flex items-center rounded-l-xl border border-r-0 border-slate-300 bg-slate-100 px-3 text-sm text-slate-500">/invite/</span><input id="invitation-link" wire:model="invitationLink" class="min-w-0 flex-1 rounded-r-xl border-slate-300 px-4 py-3 focus:border-brand-500 focus:ring-brand-500" placeholder="nama-event"></div><p class="mt-1 text-xs text-slate-500">Gunakan huruf kecil, angka, dan tanda hubung.</p>@error('invitationLink')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror</div>
-            </div>            <div>
-                <label for="event-template" class="text-sm font-semibold text-slate-700">Template aktif</label>
-                <select id="event-template" wire:model="templateId" class="mt-2 w-full rounded-xl border-slate-300 px-4 py-3 focus:border-brand-500 focus:ring-brand-500">
-                    <option value="">Belum pilih template</option>
-                    @foreach ($templates as $id => $templateName)
-                        <option value="{{ $id }}">{{ $templateName }}</option>
-                    @endforeach
-                </select>
-                @error('templateId')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-            </div>
-        </section>
         <section class="space-y-5 border-t border-slate-100 pt-8">
             <div><h2 class="text-lg font-semibold text-brand-950">Kontak event</h2><p class="mt-1 text-sm text-slate-500">Kontak yang dapat dihubungi penerima undangan.</p></div>
             <div class="grid gap-5 md:grid-cols-2"><div><label for="contact-name" class="text-sm font-semibold text-slate-700">Nama kontak</label><input id="contact-name" wire:model="contactName" type="text" class="mt-2 w-full rounded-xl border-slate-300 px-4 py-3 focus:border-brand-500 focus:ring-brand-500">@error('contactName')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror</div><div><label for="contact-phone" class="text-sm font-semibold text-slate-700">Nomor kontak</label><input id="contact-phone" wire:model="contactPhone" type="text" class="mt-2 w-full rounded-xl border-slate-300 px-4 py-3 focus:border-brand-500 focus:ring-brand-500">@error('contactPhone')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror</div></div>

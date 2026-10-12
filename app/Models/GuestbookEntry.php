@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['event_id', 'invitation_id', 'recipient_id', 'name', 'message', 'status', 'published_at'])]
+#[Fillable(['event_id', 'recipient_id', 'name', 'message', 'status', 'published_at'])]
 class GuestbookEntry extends Model
 {
     use HasFactory, SoftDeletes;
@@ -20,11 +20,6 @@ class GuestbookEntry extends Model
     public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class);
-    }
-
-    public function invitation(): BelongsTo
-    {
-        return $this->belongsTo(Invitation::class);
     }
 
     public function recipient(): BelongsTo

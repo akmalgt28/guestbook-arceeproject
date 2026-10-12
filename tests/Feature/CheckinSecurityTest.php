@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Event;
-use App\Models\Invitation;
 use App\Models\QrCode;
 use App\Models\Recipient;
 use App\Models\User;
@@ -29,16 +28,28 @@ class CheckinSecurityTest extends TestCase
         $response->assertStatus(422)->assertJson(['message' => 'QR tidak valid, sudah dinonaktifkan, atau bukan untuk event ini.']);
     }
 
-    public function test_manual_search_finds_invitation_by_recipient_name(): void
+    public function test_manual_guest_can_check_in(): void
     {
         [$user, $event] = $this->createScannerContext();
 
-        $this->actingAs($user);
-
-        Livewire::test('admin.checkins')
+        Livewire::actingAs($user)->test('admin.checkins')
             ->set('eventFilter', (string) $event->id)
-            ->set('search', 'Scanner Guest')
-            ->assertSee('Scanner Guest');
+            ->set('manualGuestName', 'Manual Guest')
+            ->set('manualGuestOrganization', 'Guestbook Corp')
+            ->set('manualGuestAttendeeCount', '3')
+            ->call('addManualGuest')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('recipients', [
+            'event_id' => $event->id,
+            'name' => 'Manual Guest',
+            'organization' => 'Guestbook Corp',
+        ]);
+        $this->assertDatabaseHas('checkins', [
+            'event_id' => $event->id,
+            'method' => 'manual',
+            'actual_attendee_count' => 3,
+        ]);
     }
 
     public function test_confirming_same_qr_twice_rejects_second_checkin(): void
@@ -82,13 +93,8 @@ class CheckinSecurityTest extends TestCase
             'name' => 'Scanner Guest',
             'invited_guest_count' => 1,
         ]);
-        [$invitation] = [Invitation::createWithToken([
-            'event_id' => $event->id,
-            'recipient_id' => $recipient->id,
-            'status' => Invitation::STATUS_ACTIVE,
-        ])['invitation']];
         $qrCode = QrCode::query()->create([
-            'invitation_id' => $invitation->id,
+            'recipient_id' => $recipient->id,
             'token_hash' => QrCode::generateTokenHash(),
             'status' => QrCode::STATUS_ACTIVE,
             'generated_at' => now(),

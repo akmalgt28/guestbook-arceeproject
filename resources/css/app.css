@@ -170,6 +170,17 @@
         background: var(--color-brand-50);
     }
 
+    .guestbook-select--disabled .guestbook-select__trigger {
+        cursor: not-allowed;
+        background: var(--color-slate-100);
+        color: var(--color-slate-500);
+        opacity: 1;
+    }
+
+    .guestbook-select--disabled .guestbook-select__icon svg {
+        color: var(--color-slate-500);
+    }
+
     .guestbook-select__icon svg {
         width: 1rem;
         height: 1rem;

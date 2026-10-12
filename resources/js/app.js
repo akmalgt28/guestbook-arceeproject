@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowUpDown, ArrowUpRight, ArrowUpToLine, BookOpen, CalendarDays, ChartNoAxesColumn, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Circle, CircleAlert, CircleCheck, CircleDot, CircleX, ClipboardCheck, Clock, Copy, createIcons, Eye, FileText, Grid2X2, GripVertical, Heart, House, Image, Images, Info, Layers3, Link, LogOut, Mail, Maximize2, Menu, MessageCircle, MessageSquareText, Minus, Monitor, MousePointer2, Music2, Phone, Palette, Pencil, Plus, QrCode, RotateCw, Save, ScanLine, Send, Settings, SlidersHorizontal, Sparkles, Square, Star, Trash2, Triangle, Upload, UserRound, Users, MapPin, X } from 'lucide';
+import { ArrowLeft, ArrowUpDown, ArrowUpRight, ArrowUpToLine, BookOpen, CalendarDays, ChartNoAxesColumn, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Circle, CircleAlert, CircleCheck, CircleDot, CircleX, ClipboardCheck, Clock, Copy, createIcons, Eye, ExternalLink, FileText, GripVertical, Heart, House, Image, Images, Info, Layers3, LayoutGrid, Link, LogOut, Mail, Map, Maximize2, Menu, MessageCircle, MessageSquareText, Minus, Monitor, MousePointer2, Music2, Phone, MapPin, Palette, Pencil, Plus, QrCode, RotateCw, Save, ScanLine, Send, Settings, Smartphone, SlidersHorizontal, Sparkles, Square, Star, Trash2, Triangle, Upload, UserRound, Users, X } from 'lucide';
 
 import { Html5Qrcode } from 'html5-qrcode';
 
@@ -168,7 +168,10 @@ function initCustomSelects() {
             trigger.setAttribute('aria-expanded', 'false');
         };
         const sync = () => {
+            const isDisabled = select.disabled;
             const selected = select.options[select.selectedIndex];
+            wrapper.classList.toggle('guestbook-select--disabled', isDisabled);
+            trigger.disabled = isDisabled;
             while (trigger.firstChild && trigger.firstChild !== icon) {
                 trigger.firstChild.remove();
             }
@@ -177,6 +180,9 @@ function initCustomSelects() {
             }
             trigger.insertBefore(document.createTextNode(selected?.textContent ?? ''), icon);
             panel.replaceChildren();
+            if (isDisabled) {
+                return;
+            }
             Array.from(select.options).forEach((option) => {
                 if (option.disabled) {
                     return;
@@ -199,6 +205,9 @@ function initCustomSelects() {
         };
 
         trigger.addEventListener('click', () => {
+            if (select.disabled) {
+                return;
+            }
             const isOpen = panel.classList.toggle('is-open');
             trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
         });
@@ -230,6 +239,7 @@ const lucideIcons = {
     ChevronLeft,
     ChevronRight,
     ChevronUp,
+    Circle,
     CircleAlert,
     CircleCheck,
     CircleDot,
@@ -239,7 +249,7 @@ const lucideIcons = {
     Copy,
     Eye,
     FileText,
-    Grid2X2,
+    ExternalLink,
     GripVertical,
     Heart,
     House,
@@ -247,7 +257,9 @@ const lucideIcons = {
     Images,
     Info,
     Layers3,
+    LayoutGrid,
     Link,
+    Map,
     LogOut,
     Mail,
     Maximize2,
@@ -266,6 +278,7 @@ const lucideIcons = {
     RotateCw,
     Save,
     ScanLine,
+    Smartphone,
     Send,
     Settings,
     SlidersHorizontal,

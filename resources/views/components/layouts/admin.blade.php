@@ -3,7 +3,6 @@
         'home' => '<i data-lucide="house" class="size-5"></i>',
         'calendar' => '<i data-lucide="calendar-days" class="size-5"></i>',
         'users' => '<i data-lucide="users" class="size-5"></i>',
-        'sparkles' => '<i data-lucide="sparkles" class="size-5"></i>',
         'image' => '<i data-lucide="image" class="size-5"></i>',
         'check' => '<i data-lucide="check" class="size-5"></i>',
         'qr' => '<i data-lucide="qr-code" class="size-5"></i>',
@@ -15,19 +14,15 @@
     $navigation = [
         ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'icon' => 'home'],
         ['label' => 'Events', 'route' => 'admin.events', 'icon' => 'calendar'],
-        ['label' => 'Templates', 'route' => 'admin.invitation-templates', 'icon' => 'sparkles'],
         ['label' => 'Reports', 'route' => 'reports.index', 'icon' => 'chart'],
     ];
     $contextEvent = request()->route('event');
     $eventNavigation = [
         ['label' => 'Overview', 'route' => 'admin.events.overview', 'icon' => 'home'],
-        ['label' => 'Invitation', 'route' => 'admin.events.invitation-editor', 'icon' => 'sparkles'],
         ['label' => 'Recipients', 'route' => 'admin.events.recipients', 'icon' => 'users'],
-        ['label' => 'RSVP', 'route' => 'admin.events.rsvp', 'icon' => 'check'],
-        ['label' => 'Guestbook', 'route' => 'admin.events.guestbook', 'icon' => 'heart'],
+        ['label' => 'Pesan', 'route' => 'admin.events.guestbook', 'icon' => 'heart'],
         ['label' => 'Media', 'route' => 'admin.events.media', 'icon' => 'image'],
-        ['label' => 'QR Check-in', 'route' => 'admin.events.qr-codes', 'icon' => 'qr'],
-        ['label' => 'Check-in', 'route' => 'admin.events.checkins', 'icon' => 'check-circle'],
+        ['label' => 'Guestbook', 'route' => 'admin.events.checkins', 'icon' => 'check-circle'],
     ];
     $currentNavigation = collect($navigation)->first(fn (array $item): bool => request()->routeIs($item['route'], $item['route'].'.*'))
         ?? collect($eventNavigation)->first(fn (array $item): bool => request()->routeIs($item['route'], $item['route'].'.*'))
@@ -69,7 +64,7 @@
                         </a>
                     @endforeach
                     @if ($contextEvent)
-                        <div class="px-3 pb-2 pt-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-300">Event aktif</div>
+                        <div class="mt-5 border-t border-white/10 px-3 pb-2 pt-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-300">Event aktif</div>
                         <div class="mb-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-3"><p class="truncate text-sm font-semibold text-white">{{ $contextEvent->name }}</p><a href="{{ route('admin.events') }}" class="mt-1 inline-flex text-xs text-brand-200 hover:text-white">Ganti event</a></div>
                         @foreach ($eventNavigation as $item)
                             @php($active = request()->routeIs($item['route'], $item['route'].'.*'))
@@ -80,6 +75,7 @@
                             ])><span @class(['grid size-7 place-items-center text-sm transition', 'text-brand-700' => $active, 'text-brand-200 group-hover:text-white' => ! $active])>{!! $icons[$item['icon']] !!}</span><span class="flex-1">{{ $item['label'] }}</span>@if($active)<span class="size-2 rounded-full bg-accent-500"></span>@endif</a>
                         @endforeach
                     @endif
+                    <div class="mt-5 border-t border-white/10 px-3 pb-2 pt-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-300">Administrasi</div>
                     @if (auth()->user()->can('users.view'))
                         <a href="{{ route('admin.users') }}" @class([
                             'group flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-semibold transition',
@@ -87,6 +83,7 @@
                             'text-brand-100/75 hover:bg-white/10 hover:text-white' => ! request()->routeIs('admin.users*'),
                         ])><span @class(['grid size-7 place-items-center text-sm transition', 'text-brand-700' => request()->routeIs('admin.users*'), 'text-brand-200 group-hover:text-white' => ! request()->routeIs('admin.users*')])>{!! $icons['users'] !!}</span><span class="flex-1">Users</span>@if(request()->routeIs('admin.users*'))<span class="size-2 rounded-full bg-accent-500"></span>@endif</a>
                     @endif
+                    <div class="mt-5 border-t border-white/10 px-3 pb-2 pt-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-300">Tools</div>
                     <a href="{{ route('scanner.index') }}" @class([
                         'group mt-4 flex items-center gap-3 rounded-2xl border px-3.5 py-3 text-sm font-semibold transition',
                         'border-accent-500/50 bg-accent-500 text-brand-950' => request()->routeIs('scanner.index'),

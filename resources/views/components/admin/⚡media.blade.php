@@ -12,6 +12,18 @@ new class extends Component
     use WithFileUploads;
 
     public string $eventFilter = '';
+    public bool $eventContext = false;
+    public function mount(?string $eventFilter = null, bool $eventContext = false): void
+    {
+        $this->eventContext = $eventContext;
+
+        if ($eventFilter !== null && $eventFilter !== '') {
+            $this->eventFilter = $eventFilter;
+            $this->uploadEventId = $eventFilter;
+            $this->eventContext = true;
+        }
+    }
+
     public string $uploadEventId = '';
     public bool $uploadOpen = false;
     public $mediaFile;
@@ -56,9 +68,9 @@ new class extends Component
 ?>
 
     <div class="space-y-8">
-        <div class="flex flex-wrap items-end justify-between gap-4"><div><h1 class="text-3xl font-semibold text-brand-950">Media</h1></div>@if (auth()->user()->can('media.upload'))<a href="{{ route('admin.media.upload') }}" class="rounded-xl bg-brand-950 px-5 py-3 text-sm font-semibold text-white">Upload media</a>@endif</div>
+        <div class="flex flex-wrap items-end justify-between gap-4"><div><h1 class="text-3xl font-semibold text-brand-950">Media</h1></div>@if (auth()->user()->can('media.upload'))<a href="{{ ($eventContext ? route('admin.events.media.upload', $eventFilter) : route('admin.media.upload')) }}" class="rounded-xl bg-brand-950 px-5 py-3 text-sm font-semibold text-white">Upload media</a>@endif</div>
         @if (session('success'))<div class="rounded-xl bg-emerald-50 p-4 text-sm text-emerald-800">{{ session('success') }}</div>@endif
         @error('mediaFile')<div class="rounded-xl bg-red-50 p-4 text-sm text-red-700">{{ $message }}</div>@enderror
-        <div class="rounded-3xl border border-slate-200 bg-white p-5"><select wire:model.live="eventFilter" class="w-full rounded-xl border-slate-300 px-4 py-3"><option value="">Semua event</option>@foreach ($events as $id => $eventName)<option value="{{ $id }}">{{ $eventName }}</option>@endforeach</select></div>
+        <div class="rounded-3xl border border-slate-200 bg-white p-5">@if ($eventContext)<div class="flex h-[50px] items-center justify-between rounded-xl border border-slate-300 bg-slate-100 px-4 py-3 text-slate-700"><span>{{ $events->get($eventFilter, 'Event aktif') }}</span><i data-lucide="lock" class="size-4 text-slate-500"></i></div>@else<select wire:model.live="eventFilter" class="w-full rounded-xl border-slate-300 px-4 py-3"><option value="">Semua event</option>@foreach ($events as $id => $eventName)<option value="{{ $id }}">{{ $eventName }}</option>@endforeach</select>@endif</div>
         <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">@forelse ($mediaFiles as $media)<article class="overflow-hidden rounded-3xl border border-slate-200 bg-white">@if (str_starts_with($media->mime_type, 'image/') && $media->url)<img src="{{ $media->url }}" alt="{{ $media->name }}" class="h-48 w-full object-cover">@else<div class="grid h-48 place-items-center bg-slate-100 text-sm font-semibold text-slate-500">{{ strtoupper($media->mime_type) }}</div>@endif<div class="p-5"><h2 class="truncate font-semibold">{{ $media->name }}</h2><p class="mt-1 text-sm text-slate-500">{{ $media->event->name }}</p>@if (auth()->user()->can('media.delete'))<button wire:click="delete({{ $media->id }})" wire:confirm="Hapus media ini?" class="mt-4 rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-700">Hapus</button>@endif</div></article>@empty<div class="rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center text-slate-500 sm:col-span-2 lg:col-span-3">Belum ada media.</div>@endforelse</div>
     </div>

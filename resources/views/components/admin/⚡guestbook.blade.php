@@ -9,6 +9,17 @@ use Livewire\Component;
 new class extends Component
 {
     public string $eventFilter = '';
+    public bool $eventContext = false;
+    public function mount(?string $eventFilter = null, bool $eventContext = false): void
+    {
+        $this->eventContext = $eventContext;
+
+        if ($eventFilter !== null && $eventFilter !== '') {
+            $this->eventFilter = $eventFilter;
+            $this->eventContext = true;
+        }
+    }
+
     public string $statusFilter = '';
 
     public function with(): array
@@ -70,6 +81,6 @@ new class extends Component
 };
 ?>
 
-    <div class="space-y-8"><div><h1 class="text-3xl font-semibold text-brand-950">Guestbook</h1></div><div class="grid gap-3 rounded-3xl border border-slate-200 bg-white p-5 md:grid-cols-2"><select wire:model.live="eventFilter" class="rounded-xl border-slate-300 px-4 py-3"><option value="">Semua event</option>@foreach ($events as $id => $eventName)<option value="{{ $id }}">{{ $eventName }}</option>@endforeach</select><select wire:model.live="statusFilter" class="rounded-xl border-slate-300 px-4 py-3"><option value="">Semua status</option><option value="visible">Visible</option><option value="hidden">Hidden</option></select></div><div class="grid gap-4">@forelse ($entries as $entry)<article class="rounded-3xl border border-slate-200 bg-white p-6"><div class="flex items-start justify-between gap-4"><div><h2 class="font-semibold">{{ $entry->name }}</h2><p class="mt-1 text-sm text-slate-500">{{ $entry->event->name }} · {{ $entry->created_at?->format('d M Y H:i') }}</p></div><span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase">{{ $entry->status }}</span></div><p class="mt-5 whitespace-pre-line text-slate-700">{{ $entry->message }}</p><div class="mt-5 flex gap-2">@if ($entry->status === 'visible')<button wire:click="moderate({{ $entry->id }}, 'hidden')" class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold">Sembunyikan</button>@else<button wire:click="moderate({{ $entry->id }}, 'visible')" class="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white">Tampilkan</button>@endif<button wire:click="delete({{ $entry->id }})" wire:confirm="Hapus ucapan ini?" class="rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-700">Hapus</button></div></article>@empty<div class="rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center text-slate-500">Belum ada ucapan.</div>@endforelse</div></div>
+    <div class="space-y-8"><div><h1 class="text-3xl font-semibold text-brand-950">Pesan</h1></div><div class="grid gap-3 rounded-3xl border border-slate-200 bg-white p-5 md:grid-cols-2">@if ($eventContext)<div class="flex h-[50px] items-center justify-between rounded-xl border border-slate-300 bg-slate-100 px-4 py-3 text-slate-700"><span>{{ $events->get($eventFilter, 'Event aktif') }}</span><i data-lucide="lock" class="size-4 text-slate-500"></i></div>@else<select wire:model.live="eventFilter" class="rounded-xl border-slate-300 px-4 py-3"><option value="">Semua event</option>@foreach ($events as $id => $eventName)<option value="{{ $id }}">{{ $eventName }}</option>@endforeach</select>@endif<select wire:model.live="statusFilter" class="rounded-xl border-slate-300 px-4 py-3"><option value="">Semua status</option><option value="visible">Visible</option><option value="hidden">Hidden</option></select></div><div class="grid gap-4">@forelse ($entries as $entry)<article class="rounded-3xl border border-slate-200 bg-white p-6"><div class="flex items-start justify-between gap-4"><div><h2 class="font-semibold">{{ $entry->name }}</h2><p class="mt-1 text-sm text-slate-500">{{ $entry->event->name }} · {{ $entry->created_at?->format('d M Y H:i') }}</p></div><span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase">{{ $entry->status }}</span></div><p class="mt-5 whitespace-pre-line text-slate-700">{{ $entry->message }}</p><div class="mt-5 flex gap-2">@if ($entry->status === 'visible')<button wire:click="moderate({{ $entry->id }}, 'hidden')" class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold">Sembunyikan</button>@else<button wire:click="moderate({{ $entry->id }}, 'visible')" class="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white">Tampilkan</button>@endif<button wire:click="delete({{ $entry->id }})" wire:confirm="Hapus ucapan ini?" class="rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-700">Hapus</button></div></article>@empty<div class="rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center text-slate-500">Belum ada ucapan.</div>@endforelse</div></div>
 
 

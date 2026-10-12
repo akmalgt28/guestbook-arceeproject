@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'event_id',
     'type',
     'name',
+    'organization',
     'phone',
     'email',
     'invited_guest_count',
@@ -32,14 +33,9 @@ class Recipient extends Model
         return $this->belongsTo(Event::class);
     }
 
-    public function familyMembers(): HasMany
+    public function qrCodes(): HasMany
     {
-        return $this->hasMany(FamilyMember::class);
-    }
-
-    public function invitations(): HasMany
-    {
-        return $this->hasMany(Invitation::class);
+        return $this->hasMany(QrCode::class);
     }
 
     public function checkins(): HasMany

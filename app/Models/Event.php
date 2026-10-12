@@ -48,13 +48,6 @@ class Event extends Model
             ->withTimestamps();
     }
 
-    public function templates(): BelongsToMany
-    {
-        return $this->belongsToMany(InvitationTemplate::class, 'event_templates', 'event_id', 'template_id')
-            ->withPivot('settings')
-            ->withTimestamps();
-    }
-
     public function mediaFiles(): HasMany
     {
         return $this->hasMany(MediaFile::class);
@@ -68,11 +61,6 @@ class Event extends Model
     public function recipients(): HasMany
     {
         return $this->hasMany(Recipient::class);
-    }
-
-    public function invitations(): HasMany
-    {
-        return $this->hasMany(Invitation::class);
     }
 
     public function scopePublished(Builder $query): Builder

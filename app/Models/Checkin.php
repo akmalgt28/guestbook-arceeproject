@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
     'event_id',
-    'invitation_id',
     'qr_code_id',
     'recipient_id',
     'checked_in_by',
@@ -30,11 +29,6 @@ class Checkin extends Model
     public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class);
-    }
-
-    public function invitation(): BelongsTo
-    {
-        return $this->belongsTo(Invitation::class);
     }
 
     public function recipient(): BelongsTo

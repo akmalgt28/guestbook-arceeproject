@@ -1,6 +1,6 @@
-<x-layouts.admin title="Guestbook">
+<x-layouts.admin title="Pesan">
     @if (isset($eventId))
-    <livewire:admin.guestbook :event-filter="$eventId" />
+    <livewire:admin.guestbook :event-filter="$eventId" :event-context="true" />
 @else
     <livewire:admin.guestbook />
 @endif

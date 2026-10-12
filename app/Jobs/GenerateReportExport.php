@@ -5,10 +5,8 @@ namespace App\Jobs;
 use App\Models\Checkin;
 use App\Models\Event;
 use App\Models\GuestbookEntry;
-use App\Models\Invitation;
 use App\Models\Recipient;
 use App\Models\ReportExport;
-use App\Models\Rsvp;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -56,31 +54,25 @@ class GenerateReportExport implements ShouldQueue
     private function headers(string $type): array
     {
         return match ($type) {
-            'recipient' => ['ID', 'Event', 'Nama', 'Tipe', 'Telepon', 'Email', 'Jumlah Tamu Diundang', 'Catatan'],
-            'rsvp' => ['ID', 'Event', 'Nama', 'Status', 'Jumlah Hadir', 'Waktu Respons', 'Catatan'],
+            'recipient' => ['ID', 'Event', 'Nama', 'Instansi', 'Tipe', 'Telepon', 'Email', 'Jumlah Tamu', 'Catatan'],
             'checkin' => ['ID', 'Event', 'Nama', 'Metode', 'Status', 'Jumlah Aktual', 'Petugas', 'Waktu Check-in', 'Catatan'],
             'guestbook' => ['ID', 'Event', 'Nama', 'Ucapan', 'Status', 'Waktu Dibuat', 'Waktu Terbit'],
-            default => ['Event', 'Penerima', 'RSVP', 'Hadir RSVP', 'Tidak Hadir', 'Belum Respons', 'Check-in', 'Tamu Check-in'],
+            default => ['Event', 'Penerima', 'Check-in', 'Tamu Check-in'],
         };
     }
 
     private function writeRows($stream, string $type, ?int $eventId, Builder $eventIds, Builder $events): void
     {
         if ($type === 'recipient') {
-            Recipient::query()->whereIn('event_id', $eventIds)->when($eventId, fn (Builder $query): Builder => $query->where('event_id', $eventId))->with('event')->lazyById(500)->each(fn (Recipient $row) => fputcsv($stream, [$row->id, $row->event->name, $row->name, $row->type, $row->phone, $row->email, $row->invited_guest_count, $row->notes]), ',', '"', chr(92));
-        } elseif ($type === 'rsvp') {
-            Rsvp::query()->whereHas('invitation', fn (Builder $query): Builder => $query->whereIn('event_id', $eventIds)->when($eventId, fn (Builder $query): Builder => $query->where('event_id', $eventId)))->with(['invitation.event', 'invitation.recipient'])->lazyById(500)->each(fn (Rsvp $row) => fputcsv($stream, [$row->id, $row->invitation->event->name, $row->invitation->recipient->name, $row->status, $row->attending_count, $row->responded_at?->toDateTimeString(), $row->notes]), ',', '"', chr(92));
+            Recipient::query()->whereIn('event_id', $eventIds)->when($eventId, fn (Builder $query): Builder => $query->where('event_id', $eventId))->with('event')->lazyById(500)->each(fn (Recipient $row) => fputcsv($stream, [$row->id, $row->event->name, $row->name, $row->organization, $row->type, $row->phone, $row->email, $row->invited_guest_count, $row->notes], ',', '"', chr(92)));
         } elseif ($type === 'checkin') {
-            Checkin::query()->whereIn('event_id', $eventIds)->when($eventId, fn (Builder $query): Builder => $query->where('event_id', $eventId))->with(['event', 'recipient', 'scanner'])->lazyById(500)->each(fn (Checkin $row) => fputcsv($stream, [$row->id, $row->event->name, $row->recipient->name, $row->method, $row->status, $row->actual_attendee_count, $row->scanner->name, $row->checked_in_at?->toDateTimeString(), $row->notes]), ',', '"', chr(92));
+            Checkin::query()->whereIn('event_id', $eventIds)->when($eventId, fn (Builder $query): Builder => $query->where('event_id', $eventId))->with(['event', 'recipient', 'scanner'])->lazyById(500)->each(fn (Checkin $row) => fputcsv($stream, [$row->id, $row->event->name, $row->recipient?->name, $row->method, $row->status, $row->actual_attendee_count, $row->scanner?->name, $row->checked_in_at?->toDateTimeString(), $row->notes], ',', '"', chr(92)));
         } elseif ($type === 'guestbook') {
-            GuestbookEntry::query()->whereIn('event_id', $eventIds)->when($eventId, fn (Builder $query): Builder => $query->where('event_id', $eventId))->with('event')->lazyById(500)->each(fn (GuestbookEntry $row) => fputcsv($stream, [$row->id, $row->event->name, $row->name, $row->message, $row->status, $row->created_at?->toDateTimeString(), $row->published_at?->toDateTimeString()]), ',', '"', chr(92));
+            GuestbookEntry::query()->whereIn('event_id', $eventIds)->when($eventId, fn (Builder $query): Builder => $query->where('event_id', $eventId))->with('event')->lazyById(500)->each(fn (GuestbookEntry $row) => fputcsv($stream, [$row->id, $row->event->name, $row->name, $row->message, $row->status, $row->created_at?->toDateTimeString(), $row->published_at?->toDateTimeString()], ',', '"', chr(92)));
         } else {
             foreach ($events->when($eventId, fn (Builder $query): Builder => $query->whereKey($eventId))->cursor() as $event) {
-                $rsvps = Rsvp::query()->whereHas('invitation', fn (Builder $query): Builder => $query->where('event_id', $event->id));
                 $checkins = Checkin::query()->where('event_id', $event->id)->where('status', Checkin::STATUS_ACCEPTED);
-                fputcsv($stream, [$event->name, $event->recipients()->count(), (clone $rsvps)->responded()->count(), (clone $rsvps)->where('status', Rsvp::STATUS_ATTENDING)->sum('attending_count'), (clone $rsvps)->where('status', Rsvp::STATUS_NOT_ATTENDING)->count(), Invitation::query()->where('event_id', $event->id)->where(function (Builder $query): void {
-                    $query->whereDoesntHave('rsvp')->orWhereHas('rsvp', fn (Builder $query): Builder => $query->where('status', Rsvp::STATUS_PENDING));
-                })->count(), (clone $checkins)->count(), (clone $checkins)->sum('actual_attendee_count')]);
+                fputcsv($stream, [$event->name, $event->recipients()->count(), (clone $checkins)->count(), (clone $checkins)->sum('actual_attendee_count')]);
             }
         }
     }
