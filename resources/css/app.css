@@ -1,0 +1,211 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+    --color-brand-50: #f1f5ff;
+    --color-brand-100: #e1e8ff;
+    --color-brand-200: #c8d3ff;
+    --color-brand-300: #a6b7ff;
+    --color-brand-400: #8498ff;
+    --color-brand-500: #6475f4;
+    --color-brand-600: #515ddd;
+    --color-brand-700: #424bb7;
+    --color-brand-800: #383e92;
+    --color-brand-900: #303675;
+    --color-brand-950: #1d214c;
+    --color-accent-50: #fff8eb;
+    --color-accent-100: #ffedc5;
+    --color-accent-500: #f59e0b;
+    --color-accent-600: #d97706;
+}
+
+@layer base {
+    *,
+    *::before,
+    *::after {
+        box-shadow: none !important;
+    }
+
+    body {
+        @apply antialiased;
+    }
+
+    button,
+    a[href],
+    select,
+    input[type='checkbox'],
+    input[type='radio'],
+    input[type='file']::file-selector-button {
+        cursor: pointer;
+    }
+
+    ::selection {
+        background: var(--color-brand-200);
+        color: var(--color-brand-950);
+    }
+
+    input:not([type='checkbox']):not([type='radio']):not([type='color']),
+    select,
+    textarea {
+        @apply rounded-xl border border-slate-300 bg-white text-slate-900 transition-shadow;
+    }
+
+    select {
+        @apply appearance-none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231d214c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+        background-position: right 0.85rem center;
+        background-repeat: no-repeat;
+        background-size: 1rem;
+        padding-right: 2.75rem;
+    }
+
+    input[type='date'],
+    input[type='time'] {
+        @apply rounded-xl;
+        color-scheme: light;
+    }
+
+    input[type='date']::-webkit-calendar-picker-indicator,
+    input[type='time']::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+        opacity: 0.75;
+    }
+
+    input[type='checkbox'] {
+        width: 1.25rem !important;
+        height: 1.25rem !important;
+        appearance: none !important;
+        border: 2px solid var(--color-slate-300) !important;
+        border-radius: 0.5rem !important;
+        background-color: white !important;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: 0.75rem;
+        flex: 0 0 auto;
+        vertical-align: middle;
+        transition: border-color 150ms ease, background-color 150ms ease, transform 150ms ease;
+    }
+
+    input[type='checkbox']:checked {
+        border-color: var(--color-brand-700) !important;
+        background-color: var(--color-brand-700) !important;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12 4 4L19 6'%2F%3E%3C%2Fsvg%3E");
+    }
+
+    input[type='checkbox']:focus-visible {
+        outline: 2px solid var(--color-brand-300);
+        outline-offset: 2px;
+    }
+
+    input[type='radio'] {
+        @apply size-5 appearance-none rounded-full border-2 border-slate-300 bg-white align-middle transition;
+    }
+
+    input[type='radio']:checked {
+        border-color: var(--color-brand-700);
+        background: radial-gradient(circle, var(--color-brand-700) 0 38%, white 42% 100%);
+    }
+
+    input[type='color'] {
+        @apply h-12 w-full cursor-pointer rounded-xl border border-slate-300 bg-white p-1;
+    }
+
+    input[type='file'] {
+        @apply cursor-pointer rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-600;
+    }
+
+    input[type='file']::file-selector-button {
+        @apply mr-3 rounded-lg border-0 bg-brand-100 px-3 py-2 text-sm font-semibold text-brand-800;
+    }
+
+    input:not([type='radio']):focus,
+    select:focus,
+    textarea:focus {
+        @apply border-brand-500 ring-2 ring-brand-100 outline-none;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+        @apply text-slate-400;
+    }
+}
+
+@layer components {
+    .guestbook-select {
+        position: relative;
+        width: 100%;
+    }
+
+    .guestbook-select__native {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important;
+        white-space: nowrap !important;
+    }
+
+    .guestbook-select__trigger {
+        display: flex;
+        width: 100%;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        border: 1px solid var(--color-slate-300);
+        border-radius: 0.75rem;
+        background: white;
+        padding: 0.75rem 1rem;
+        text-align: left;
+        color: var(--color-slate-900);
+        transition: border-color 150ms ease, background-color 150ms ease;
+    }
+
+    .guestbook-select__trigger:hover,
+    .guestbook-select__trigger[aria-expanded='true'] {
+        border-color: var(--color-brand-400);
+        background: var(--color-brand-50);
+    }
+
+    .guestbook-select__icon svg {
+        width: 1rem;
+        height: 1rem;
+        color: var(--color-brand-700);
+    }
+
+    .guestbook-select__panel {
+        position: absolute;
+        z-index: 50;
+        top: calc(100% + 0.5rem);
+        left: 0;
+        display: none;
+        width: 100%;
+        max-height: 16rem;
+        overflow-y: auto;
+        border: 1px solid var(--color-slate-200);
+        border-radius: 0.75rem;
+        background: white;
+        padding: 0.35rem;
+    }
+
+    .guestbook-select__panel.is-open {
+        display: block;
+    }
+
+    .guestbook-select__option {
+        display: block;
+        width: 100%;
+        border-radius: 0.6rem;
+        padding: 0.65rem 0.75rem;
+        text-align: left;
+        color: var(--color-slate-700);
+    }
+
+    .guestbook-select__option:hover {
+        background: var(--color-brand-50);
+        color: var(--color-brand-800);
+    }
+}
